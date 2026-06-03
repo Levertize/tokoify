@@ -16,6 +16,8 @@ interface ProductInfoProps {
   stock: number
   description: string
   onAddToCart: () => void
+  isWishlisted?: boolean
+  onToggleWishlist?: () => void
 }
 
 function formatIDR(amount: number): string {
@@ -40,8 +42,9 @@ export function ProductInfo({
   stock,
   description,
   onAddToCart,
+  isWishlisted = false,
+  onToggleWishlist,
 }: ProductInfoProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false)
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
 
   return (
@@ -153,7 +156,7 @@ export function ProductInfo({
           Tambah ke Keranjang
         </Button>
         <button
-          onClick={() => setIsWishlisted(!isWishlisted)}
+          onClick={onToggleWishlist}
           className={cn(
             "flex h-12 items-center justify-center gap-2 rounded-lg border-2 px-6 transition-all duration-200",
             isWishlisted

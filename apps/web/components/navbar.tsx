@@ -36,6 +36,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import apiClient from "@/lib/api";
+import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 
 interface NavbarProps {
   user?: {
@@ -76,8 +78,17 @@ export function Navbar({
   cartCount = 2,
 }: NavbarProps) {
   const { user: loggedInUser, clearAuth } = useAuthStore();
+  const fetchCart = useCartStore((state) => state.fetchCart);
+  const fetchWishlist = useWishlistStore((state) => state.fetchWishlist);
+  const totalCartItems = useCartStore((state) => state.totalItems());
+  const cartBadgeCount = loggedInUser ? totalCartItems : 0;
+
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const suggestionsRef = React.useRef<HTMLDivElement>(null);
+  const mobileSuggestionsRef = React.useRef<HTMLDivElement>(null);
 
   const getInitials = (name: string) => {
     return name
@@ -106,6 +117,7 @@ export function Navbar({
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setShowSuggestions(false);
       router.push(`/jelajahi?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
@@ -120,6 +132,45 @@ export function Navbar({
       window.location.href = "/login";
     }
   };
+
+  React.useEffect(() => {
+    if (loggedInUser) {
+      fetchCart();
+      fetchWishlist();
+    }
+  }, [loggedInUser, fetchCart, fetchWishlist]);
+
+  React.useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res: any = await apiClient.get(`/products/search/suggestions?q=${encodeURIComponent(searchQuery)}`);
+        if (res?.success && Array.isArray(res.data)) {
+          setSuggestions(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch suggestions:", err);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -210,17 +261,39 @@ export function Navbar({
           </div>
 
           {/* Desktop Search Bar */}
-          <div className="hidden md:block">
+          <div className="hidden md:block relative" ref={suggestionsRef}>
             <form onSubmit={handleSearchSubmit} className="relative">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
                 placeholder="Cari produk..."
                 className="h-9 w-70 rounded-full border border-border bg-background pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
               />
             </form>
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 mt-1 w-70 rounded-lg border border-border bg-card p-1 shadow-lg z-50">
+                {suggestions.map((suggestion, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setSearchQuery(suggestion);
+                      setShowSuggestions(false);
+                      router.push(`/jelajahi?q=${encodeURIComponent(suggestion)}`);
+                    }}
+                    className="flex w-full items-center px-3 py-2 text-left text-sm rounded-md hover:bg-muted text-foreground transition-colors"
+                  >
+                    <Search className="mr-2 size-3.5 text-muted-foreground" />
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Desktop Right Icons */}
@@ -234,14 +307,14 @@ export function Navbar({
             </button>
 
             {/* Cart */}
-            <button className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted">
+            <Link href="/cart" className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted">
               <ShoppingCart className="size-5" />
-              {cartCount > 0 && (
+              {cartBadgeCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex size-5 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
-                  {formatBadgeCount(cartCount)}
+                  {formatBadgeCount(cartBadgeCount)}
                 </span>
               )}
-            </button>
+            </Link>
 
             {/* User Avatar Dropdown */}
             <DropdownMenu>
@@ -269,9 +342,11 @@ export function Navbar({
                   <Package className="size-4" />
                   Pesanan Saya
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Heart className="size-4" />
-                  Wishlist
+                <DropdownMenuItem asChild>
+                  <Link href="/wishlist" className="flex w-full items-center gap-2">
+                    <Heart className="size-4" />
+                    Wishlist
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive" onClick={handleLogout}>
@@ -290,14 +365,14 @@ export function Navbar({
             >
               <Search className="size-5" />
             </button>
-            <button className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted">
+            <Link href="/cart" className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted">
               <ShoppingCart className="size-5" />
-              {cartCount > 0 && (
+              {cartBadgeCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex size-5 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
-                  {formatBadgeCount(cartCount)}
+                  {formatBadgeCount(cartBadgeCount)}
                 </span>
               )}
-            </button>
+            </Link>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="rounded-full p-2 text-foreground transition-colors hover:bg-muted"
@@ -360,21 +435,44 @@ export function Navbar({
         <div
           className={cn(
             "overflow-hidden border-t border-border transition-all duration-300 md:hidden",
-            isMobileSearchOpen ? "max-h-16" : "max-h-0 border-t-0"
+            isMobileSearchOpen ? "max-h-[300px]" : "max-h-0 border-t-0"
           )}
         >
-          <div className="px-4 py-3">
+          <div className="px-4 py-3" ref={mobileSuggestionsRef}>
             <form onSubmit={handleSearchSubmit} className="relative">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
                 placeholder="Cari produk..."
                 className="h-10 w-full rounded-full border border-border bg-background pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
               />
             </form>
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="mt-2 rounded-lg border border-border bg-card p-1 shadow-lg z-50">
+                {suggestions.map((suggestion, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setSearchQuery(suggestion);
+                      setShowSuggestions(false);
+                      setIsMobileSearchOpen(false);
+                      router.push(`/jelajahi?q=${encodeURIComponent(suggestion)}`);
+                    }}
+                    className="flex w-full items-center px-3 py-2 text-left text-sm rounded-md hover:bg-muted text-foreground transition-colors"
+                  >
+                    <Search className="mr-2 size-3.5 text-muted-foreground" />
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -431,14 +529,14 @@ export function Navbar({
             <span className="text-xs">Kategori</span>
           </Link>
           <Link
-            href="/checkout"
+            href="/cart"
             className="relative flex flex-col items-center gap-1 text-muted-foreground"
           >
             <div className="relative">
               <ShoppingCart className="size-5" />
-              {cartCount > 0 && (
+              {cartBadgeCount > 0 && (
                 <span className="absolute -right-2 -top-1 flex size-4 items-center justify-center rounded-full bg-foreground text-[10px] font-medium text-background">
-                  {cartCount}
+                  {cartBadgeCount}
                 </span>
               )}
             </div>

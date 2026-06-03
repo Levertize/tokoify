@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { getCache, setCache } from '@/lib/redis';
 import { uploadToCloudinary, deleteFromCloudinary } from '@/lib/cloudinary';
 import {
   BadRequestError,
@@ -195,6 +196,53 @@ export class ProductService {
       variants: product.variants,
       createdAt: product.createdAt,
     };
+  }
+
+  /**
+   * Get search suggestions / autocomplete (max 5 results, cached in Redis for 10 minutes)
+   */
+  async getSuggestions(q: string): Promise<string[]> {
+    if (!q || q.trim().length < 2) {
+      return [];
+    }
+
+    const queryStr = q.trim().toLowerCase();
+    const cacheKey = `search:suggestions:${queryStr}`;
+
+    try {
+      const cached = await getCache<string[]>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    } catch (err) {
+      console.error('Redis getCache suggestions error:', err);
+    }
+
+    const products = await prisma.product.findMany({
+      where: {
+        name: {
+          contains: queryStr,
+          mode: 'insensitive',
+        },
+        isActive: true,
+        isApproved: true,
+        deletedAt: null,
+      },
+      select: {
+        name: true,
+      },
+      take: 5,
+    });
+
+    const suggestions = products.map((p) => p.name);
+
+    try {
+      await setCache(cacheKey, suggestions, 600); // 10 minutes cache
+    } catch (err) {
+      console.error('Redis setCache suggestions error:', err);
+    }
+
+    return suggestions;
   }
 
   /**

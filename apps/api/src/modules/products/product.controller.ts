@@ -13,6 +13,16 @@ export class ProductController {
     }
   }
 
+  async getSuggestions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { q } = req.query;
+      const suggestions = await productService.getSuggestions(q as string);
+      successResponse(res, suggestions, 'Suggestions pencarian berhasil diambil', 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getProductDetail(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const product = await productService.getProductDetail(req.params.slug as string);

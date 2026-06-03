@@ -14,6 +14,7 @@ import {
 const router: Router = Router();
 
 router.get('/', validateQuery(ProductQuerySchema), productController.getProducts);
+router.get('/search/suggestions', productController.getSuggestions);
 router.get('/:slug', productController.getProductDetail);
 router.post(
   '/',
