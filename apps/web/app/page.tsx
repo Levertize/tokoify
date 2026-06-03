@@ -4,9 +4,19 @@ import { useState, useEffect } from "react"
 import { ProductCard, type Product } from "@/components/product-card"
 import { Navbar } from "@/components/navbar"
 import apiClient from "@/lib/api"
+import { useCartStore } from "@/store/cartStore"
+import { useWishlistStore } from "@/store/wishlistStore"
+import { useAuthStore } from "@/store/authStore"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export default function ProductShowcase() {
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set())
+  const router = useRouter()
+  const { user: loggedInUser } = useAuthStore()
+  const addToCart = useCartStore((state) => state.addToCart)
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist)
+  const isWishlisted = useWishlistStore((state) => state.isWishlisted)
+
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -40,26 +50,48 @@ export default function ProductShowcase() {
     getFeaturedProducts()
   }, [])
 
-  const handleAddToCart = (productId: string) => {
-    console.log("[v0] Adding to cart:", productId)
-    // Cart logic would go here
+  const handleAddToCart = async (prod: Product) => {
+    if (!loggedInUser) {
+      toast.error("Silakan login terlebih dahulu untuk menambahkan produk ke keranjang.")
+      router.push("/login")
+      return
+    }
+    try {
+      const res: any = await apiClient.get(`/products/${prod.slug}`)
+      const variants = res.data?.variants || []
+      if (variants.length === 0) {
+        toast.error("Varian produk tidak tersedia.")
+        return
+      }
+      await addToCart(variants[0].id, 1)
+      toast.success("Produk berhasil ditambahkan ke keranjang")
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Gagal menambahkan produk ke keranjang")
+    }
   }
 
-  const handleToggleWishlist = (productId: string) => {
-    setWishlist((prev) => {
-      const next = new Set(prev)
-      if (next.has(productId)) {
-        next.delete(productId)
-      } else {
-        next.add(productId)
-      }
-      return next
-    })
+  const handleToggleWishlist = async (productId: string) => {
+    if (!loggedInUser) {
+      toast.error("Silakan login terlebih dahulu untuk menyimpan produk.")
+      router.push("/login")
+      return
+    }
+    try {
+      const wish = isWishlisted(productId)
+      await toggleWishlist(productId)
+      toast.success(
+        wish
+          ? "Produk dihapus dari wishlist"
+          : "Produk ditambahkan ke wishlist"
+      )
+    } catch (err) {
+      toast.error("Gagal mengubah wishlist")
+    }
   }
 
   return (
     <>
-      <Navbar notificationCount={3} cartCount={2} />
+      <Navbar />
       <main className="min-h-screen bg-background px-4 py-12 pb-24 md:pb-12">
       <div className="mx-auto max-w-6xl">
         {/* Header */}
@@ -94,9 +126,9 @@ export default function ProductShowcase() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onAddToCart={handleAddToCart}
-                onToggleWishlist={handleToggleWishlist}
-                isWishlisted={wishlist.has(product.id)}
+                onAddToCart={() => handleAddToCart(product)}
+                onToggleWishlist={() => handleToggleWishlist(product.id)}
+                isWishlisted={isWishlisted(product.id)}
               />
             ))}
           </div>

@@ -1,18 +1,28 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { ProductCard, type Product } from '@/components/product-card';
 import { FilterSidebar } from '@/components/explore/filter-sidebar';
 import { ViewControls } from '@/components/explore/view-controls';
 import { Pagination } from '@/components/explore/pagination';
 import apiClient from '@/lib/api';
+import { useCartStore } from '@/store/cartStore';
+import { useWishlistStore } from '@/store/wishlistStore';
+import { useAuthStore } from '@/store/authStore';
+import { toast } from 'sonner';
 
 const ITEMS_PER_PAGE = 12;
 
 function ExploreContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user: loggedInUser } = useAuthStore();
+  const addToCart = useCartStore((state) => state.addToCart);
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
+  const isWishlisted = useWishlistStore((state) => state.isWishlisted);
+
   const searchQuery = searchParams.get('q') || '';
   const categoryQuery = searchParams.get('category') || '';
 
@@ -25,7 +35,6 @@ function ExploreContent() {
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'popular' | 'rating'>('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set());
 
   // Sync category state when URL search query changes
   useEffect(() => {
@@ -131,25 +140,48 @@ function ExploreContent() {
 
   const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
 
-  const handleAddToCart = (productId: string) => {
-    console.log('Added to cart:', productId);
+  const handleAddToCart = async (prod: Product) => {
+    if (!loggedInUser) {
+      toast.error('Silakan login terlebih dahulu untuk menambahkan produk ke keranjang.');
+      router.push('/login');
+      return;
+    }
+    try {
+      const res: any = await apiClient.get(`/products/${prod.slug}`);
+      const variants = res.data?.variants || [];
+      if (variants.length === 0) {
+        toast.error('Varian produk tidak tersedia.');
+        return;
+      }
+      await addToCart(variants[0].id, 1);
+      toast.success('Produk berhasil ditambahkan ke keranjang');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Gagal menambahkan produk ke keranjang');
+    }
   };
 
-  const handleToggleWishlist = (productId: string) => {
-    setWishlist(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(productId)) {
-        newSet.delete(productId);
-      } else {
-        newSet.add(productId);
-      }
-      return newSet;
-    });
+  const handleToggleWishlist = async (productId: string) => {
+    if (!loggedInUser) {
+      toast.error('Silakan login terlebih dahulu untuk menyimpan produk.');
+      router.push('/login');
+      return;
+    }
+    try {
+      const wish = isWishlisted(productId);
+      await toggleWishlist(productId);
+      toast.success(
+        wish
+          ? 'Produk dihapus dari wishlist'
+          : 'Produk ditambahkan ke wishlist'
+      );
+    } catch (err) {
+      toast.error('Gagal mengubah wishlist');
+    }
   };
 
   return (
     <>
-      <Navbar notificationCount={3} cartCount={2} />
+      <Navbar />
       <main className="min-h-screen bg-background">
         {/* Header */}
         <section className="border-b border-border bg-card px-4 py-8 md:px-6">
@@ -211,9 +243,9 @@ function ExploreContent() {
                       <ProductCard
                         key={product.id}
                         product={product}
-                        onAddToCart={handleAddToCart}
-                        onToggleWishlist={handleToggleWishlist}
-                        isWishlisted={wishlist.has(product.id)}
+                        onAddToCart={() => handleAddToCart(product)}
+                        onToggleWishlist={() => handleToggleWishlist(product.id)}
+                        isWishlisted={isWishlisted(product.id)}
                       />
                     ))}
                   </div>
