@@ -1,17 +1,55 @@
-# v0 sandbox internal files
-__v0_runtime_loader.js
-__v0_devtools.tsx
-__v0_jsx-dev-runtime.ts
-.snowflake/
-.v0-trash/
-.vercel/
+# ==============================
+# Tokoify — .gitignore
+# ==============================
 
-# Environment variables
-.env*.local
+# Dependencies
+node_modules/
+.pnpm-store/
 
-# Common ignores
-node_modules
-.next/
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+
+# Build outputs
+dist/
+build/
+
+# Prisma
+apps/api/prisma/migrations/**/migration_lock.toml
+
+# Turbo
+.turbo/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
 .DS_Store
-prd.md
-rules.md
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Docker volumes (local)
+postgres_data/
+redis_data/
+
+# Misc
+*.tsbuildinfo
