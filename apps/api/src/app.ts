@@ -9,6 +9,7 @@ import { API_PREFIX } from '@/config/constants';
 import { errorHandler } from '@/middlewares/errorHandler.middleware';
 import { logger } from '@/utils/logger';
 import { prisma } from '@/lib/prisma';
+import routes from '@/routes/index';
 
 // ==============================
 // Express App Setup
@@ -76,19 +77,8 @@ app.get(`${API_PREFIX}/health`, async (_req, res) => {
 });
 
 // ==============================
-// API Routes (will be added per module in subsequent phases)
-// ==============================
-
-// app.use(`${API_PREFIX}/auth`, authRoutes);
-// app.use(`${API_PREFIX}/users`, userRoutes);
-// app.use(`${API_PREFIX}/products`, productRoutes);
-// app.use(`${API_PREFIX}/categories`, categoryRoutes);
-// app.use(`${API_PREFIX}/cart`, cartRoutes);
-// app.use(`${API_PREFIX}/orders`, orderRoutes);
-// app.use(`${API_PREFIX}/payments`, paymentRoutes);
-// app.use(`${API_PREFIX}/reviews`, reviewRoutes);
-// app.use(`${API_PREFIX}/wishlist`, wishlistRoutes);
-// app.use(`${API_PREFIX}/admin`, adminRoutes);
+// API Routes
+app.use(API_PREFIX, routes);
 
 // ==============================
 // 404 Handler
