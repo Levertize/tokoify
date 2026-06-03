@@ -1,0 +1,415 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import {
+  Search,
+  Bell,
+  ShoppingCart,
+  Menu,
+  X,
+  Home,
+  Grid3X3,
+  User,
+  Package,
+  Heart,
+  LogOut,
+  Shirt,
+  Laptop,
+  Sofa,
+  Dumbbell,
+  Sparkles,
+  Baby,
+  BookOpen,
+  UtensilsCrossed,
+  ChevronDown,
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+interface NavbarProps {
+  user?: {
+    name: string;
+    email: string;
+    avatar?: string;
+    initials: string;
+  };
+  notificationCount?: number;
+  cartCount?: number;
+}
+
+const navLinks = [
+  { href: "/", label: "Beranda" },
+  { href: "/produk", label: "Produk" },
+  { href: "/kategori", label: "Kategori", hasMegaMenu: true },
+];
+
+const categories = [
+  { icon: Shirt, label: "Fashion", href: "/kategori/fashion", color: "bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400" },
+  { icon: Laptop, label: "Elektronik", href: "/kategori/elektronik", color: "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400" },
+  { icon: Sofa, label: "Rumah Tangga", href: "/kategori/rumah-tangga", color: "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" },
+  { icon: Dumbbell, label: "Olahraga", href: "/kategori/olahraga", color: "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400" },
+  { icon: Sparkles, label: "Kecantikan", href: "/kategori/kecantikan", color: "bg-pink-100 text-pink-600 dark:bg-pink-950 dark:text-pink-400" },
+  { icon: Baby, label: "Ibu & Anak", href: "/kategori/ibu-anak", color: "bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400" },
+  { icon: BookOpen, label: "Buku", href: "/kategori/buku", color: "bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400" },
+  { icon: UtensilsCrossed, label: "Makanan", href: "/kategori/makanan", color: "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400" },
+  { icon: Package, label: "Lainnya", href: "/kategori/lainnya", color: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400" },
+];
+
+export function Navbar({
+  user = {
+    name: "Budi Santoso",
+    email: "budi@email.com",
+    initials: "BS",
+  },
+  notificationCount = 3,
+  cartCount = 2,
+}: NavbarProps) {
+  const [isScrolled, setIsScrolled] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState(false);
+  const [isMegaMenuOpen, setIsMegaMenuOpen] = React.useState(false);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const megaMenuTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  React.useEffect(() => {
+    if (isMobileSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isMobileSearchOpen]);
+
+  const formatBadgeCount = (count: number) => {
+    if (count > 99) return "99+";
+    return count.toString();
+  };
+
+  const handleMegaMenuEnter = () => {
+    if (megaMenuTimeoutRef.current) {
+      clearTimeout(megaMenuTimeoutRef.current);
+    }
+    setIsMegaMenuOpen(true);
+  };
+
+  const handleMegaMenuLeave = () => {
+    megaMenuTimeoutRef.current = setTimeout(() => {
+      setIsMegaMenuOpen(false);
+    }, 150);
+  };
+
+  return (
+    <>
+      {/* Desktop & Mobile Navbar */}
+      <header
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 border-b border-border transition-all duration-300",
+          isScrolled
+            ? "bg-card/80 backdrop-blur-md"
+            : "bg-card"
+        )}
+      >
+        <nav className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:h-16 md:px-6">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded bg-foreground">
+              <span className="text-xs font-bold text-background">T</span>
+            </div>
+            <span className="text-xl font-semibold text-foreground">
+              Tokoify
+            </span>
+          </Link>
+
+          {/* Desktop Navigation Links */}
+          <div className="hidden items-center gap-8 md:flex">
+            {navLinks.map((link) =>
+              link.hasMegaMenu ? (
+                <div
+                  key={link.href}
+                  className="relative"
+                  onMouseEnter={handleMegaMenuEnter}
+                  onMouseLeave={handleMegaMenuLeave}
+                >
+                  <button
+                    className="group relative flex items-center gap-1 text-sm text-foreground transition-colors hover:text-foreground"
+                  >
+                    {link.label}
+                    <ChevronDown className={cn(
+                      "size-3.5 transition-transform duration-200",
+                      isMegaMenuOpen && "rotate-180"
+                    )} />
+                    <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-foreground transition-all duration-300 group-hover:w-full" />
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="group relative text-sm text-foreground transition-colors hover:text-foreground"
+                >
+                  {link.label}
+                  <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-foreground transition-all duration-300 group-hover:w-full" />
+                </Link>
+              )
+            )}
+          </div>
+
+          {/* Desktop Search Bar */}
+          <div className="hidden md:block">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Cari produk..."
+                className="h-9 w-70 rounded-full border border-border bg-background pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Desktop Right Icons */}
+          <div className="hidden items-center gap-1 md:flex">
+            {/* Notification Bell */}
+            <button className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted">
+              <Bell className="size-5" />
+              {notificationCount > 0 && (
+                <span className="absolute right-1 top-1 flex size-2 items-center justify-center rounded-full bg-destructive" />
+              )}
+            </button>
+
+            {/* Cart */}
+            <button className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted">
+              <ShoppingCart className="size-5" />
+              {cartCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex size-5 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
+                  {formatBadgeCount(cartCount)}
+                </span>
+              )}
+            </button>
+
+            {/* User Avatar Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="ml-2 rounded-full focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:ring-offset-2 focus:ring-offset-background">
+                  <Avatar className="size-8">
+                    {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+                    <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
+                      {user.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium text-foreground">{user.name}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <User className="size-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Package className="size-4" />
+                  Pesanan Saya
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Heart className="size-4" />
+                  Wishlist
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive">
+                  <LogOut className="size-4" />
+                  Keluar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Mobile Right Icons */}
+          <div className="flex items-center gap-1 md:hidden">
+            <button
+              onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+              className="rounded-full p-2 text-foreground transition-colors hover:bg-muted"
+            >
+              <Search className="size-5" />
+            </button>
+            <button className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted">
+              <ShoppingCart className="size-5" />
+              {cartCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex size-5 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
+                  {formatBadgeCount(cartCount)}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="rounded-full p-2 text-foreground transition-colors hover:bg-muted"
+            >
+              {isMobileMenuOpen ? (
+                <X className="size-5" />
+              ) : (
+                <Menu className="size-5" />
+              )}
+            </button>
+          </div>
+        </nav>
+
+        {/* Mega Menu Dropdown */}
+        <div
+          className={cn(
+            "absolute left-0 right-0 top-full overflow-hidden border-b border-border bg-card transition-all duration-300 ease-out",
+            isMegaMenuOpen
+              ? "visible max-h-80 opacity-100"
+              : "invisible max-h-0 opacity-0"
+          )}
+          onMouseEnter={handleMegaMenuEnter}
+          onMouseLeave={handleMegaMenuLeave}
+        >
+          <div className="mx-auto max-w-7xl px-6 py-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-sm font-medium text-foreground">Semua Kategori</h3>
+              <Link
+                href="/kategori"
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Lihat Semua
+              </Link>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {categories.map((category) => {
+                const Icon = category.icon;
+                return (
+                  <Link
+                    key={category.href}
+                    href={category.href}
+                    className="group flex items-center gap-3 rounded-lg border border-transparent p-3 transition-all duration-200 hover:border-border hover:bg-muted/50"
+                    onClick={() => setIsMegaMenuOpen(false)}
+                  >
+                    <div className={cn(
+                      "flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-110",
+                      category.color
+                    )}>
+                      <Icon className="size-5" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">{category.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Search Bar */}
+        <div
+          className={cn(
+            "overflow-hidden border-t border-border transition-all duration-300 md:hidden",
+            isMobileSearchOpen ? "max-h-16" : "max-h-0 border-t-0"
+          )}
+        >
+          <div className="px-4 py-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Cari produk..."
+                className="h-10 w-full rounded-full border border-border bg-background pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        <div
+          className={cn(
+            "overflow-hidden border-t border-border transition-all duration-300 md:hidden",
+            isMobileMenuOpen ? "max-h-96" : "max-h-0 border-t-0"
+          )}
+        >
+          <div className="flex flex-col px-4 py-2">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="py-3 text-sm text-foreground transition-colors hover:text-muted-foreground"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="my-2 h-px bg-border" />
+            <div className="flex items-center gap-3 py-3">
+              <Avatar className="size-8">
+                {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+                <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
+                  {user.initials}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium text-foreground">{user.name}</p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card md:hidden">
+        <div className="flex h-16 items-center justify-around px-4">
+          <Link
+            href="/"
+            className="flex flex-col items-center gap-1 text-foreground"
+          >
+            <Home className="size-5" />
+            <span className="text-xs">Home</span>
+          </Link>
+          <Link
+            href="/kategori"
+            className="flex flex-col items-center gap-1 text-muted-foreground"
+          >
+            <Grid3X3 className="size-5" />
+            <span className="text-xs">Kategori</span>
+          </Link>
+          <Link
+            href="/keranjang"
+            className="relative flex flex-col items-center gap-1 text-muted-foreground"
+          >
+            <div className="relative">
+              <ShoppingCart className="size-5" />
+              {cartCount > 0 && (
+                <span className="absolute -right-2 -top-1 flex size-4 items-center justify-center rounded-full bg-foreground text-[10px] font-medium text-background">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+            <span className="text-xs">Keranjang</span>
+          </Link>
+          <Link
+            href="/profil"
+            className="flex flex-col items-center gap-1 text-muted-foreground"
+          >
+            <User className="size-5" />
+            <span className="text-xs">Profil</span>
+          </Link>
+        </div>
+      </nav>
+
+      {/* Spacer for fixed navbar */}
+      <div className="h-14 md:h-16" />
+    </>
+  );
+}

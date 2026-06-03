@@ -1,0 +1,20 @@
+{
+  "name": "tokoify",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@tokoify/web",
+    "dev:api": "turbo run dev --filter=@tokoify/api",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "db:migrate": "pnpm --filter @tokoify/api exec prisma migrate dev",
+    "db:seed": "pnpm --filter @tokoify/api exec prisma db seed",
+    "db:studio": "pnpm --filter @tokoify/api exec prisma studio",
+    "db:generate": "pnpm --filter @tokoify/api exec prisma generate"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
