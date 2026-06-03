@@ -180,7 +180,7 @@ export function Navbar({
             {navLinks.map((link) =>
               link.hasMegaMenu ? (
                 <div
-                  key={link.href}
+                  key={link.label}
                   className="relative"
                   onMouseEnter={handleMegaMenuEnter}
                   onMouseLeave={handleMegaMenuLeave}
@@ -198,7 +198,7 @@ export function Navbar({
                 </div>
               ) : (
                 <Link
-                  key={link.href}
+                  key={link.label}
                   href={link.href}
                   className="group relative text-sm text-foreground transition-colors hover:text-foreground"
                 >
@@ -388,7 +388,7 @@ export function Navbar({
           <div className="flex flex-col px-4 py-2">
             {navLinks.map((link) => (
               <Link
-                key={link.href}
+                key={link.label}
                 href={link.href}
                 className="py-3 text-sm text-foreground transition-colors hover:text-muted-foreground"
                 onClick={() => setIsMobileMenuOpen(false)}
