@@ -10,10 +10,12 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url().default('http://localhost:3000'),
 
   // Database
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.string().url('DATABASE_URL harus berupa URL valid'),
+  DIRECT_URL: z.string().url('DIRECT_URL harus berupa URL valid'),
 
   // Redis
-  REDIS_URL: z.string().default('redis://localhost:6379'),
+  UPSTASH_REDIS_REST_URL: z.string().url('UPSTASH_REDIS_REST_URL harus berupa URL valid'),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1, 'UPSTASH_REDIS_REST_TOKEN wajib diisi'),
 
   // JWT
   JWT_PRIVATE_KEY: z.string().min(1),
