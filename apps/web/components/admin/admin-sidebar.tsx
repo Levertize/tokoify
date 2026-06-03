@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/authStore";
+import apiClient from "@/lib/api";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -38,12 +40,32 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ user = { name: "Sari Dewi", role: "Admin" } }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { user: loggedInUser, clearAuth } = useAuthStore();
+
+  const currentUser = loggedInUser
+    ? {
+        name: loggedInUser.name,
+        role: loggedInUser.role === "admin" || loggedInUser.role === "super_admin" ? "Admin" : loggedInUser.role,
+        avatar: loggedInUser.avatar || undefined,
+      }
+    : user;
 
   const isActive = (href: string) => {
     if (href === "/admin") {
       return pathname === "/admin";
     }
     return pathname.startsWith(href);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await apiClient.post("/auth/logout");
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      clearAuth();
+      window.location.href = "/login";
+    }
   };
 
   return (
@@ -86,9 +108,9 @@ export function AdminSidebar({ user = { name: "Sari Dewi", role: "Admin" } }: Ad
       <div className="border-t border-zinc-800 p-4">
         <div className="flex items-center gap-3">
           <Avatar className="size-10">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
             <AvatarFallback className="bg-zinc-700 text-white">
-              {user.name
+              {currentUser.name
                 .split(" ")
                 .map((n) => n[0])
                 .join("")
@@ -96,13 +118,14 @@ export function AdminSidebar({ user = { name: "Sari Dewi", role: "Admin" } }: Ad
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 overflow-hidden">
-            <p className="truncate text-sm font-medium text-white">{user.name}</p>
-            <p className="truncate text-xs text-zinc-500">{user.role}</p>
+            <p className="truncate text-sm font-medium text-white">{currentUser.name}</p>
+            <p className="truncate text-xs text-zinc-500">{currentUser.role}</p>
           </div>
           <Button
             variant="ghost"
             size="icon-sm"
             className="shrink-0 text-zinc-500 hover:bg-zinc-800 hover:text-white"
+            onClick={handleLogout}
           >
             <LogOut className="size-4" />
             <span className="sr-only">Logout</span>

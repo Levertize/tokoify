@@ -14,8 +14,11 @@ const ITEMS_PER_PAGE = 12;
 function ExploreContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
+  const categoryQuery = searchParams.get('category') || '';
 
-  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string[]>(() => {
+    return categoryQuery ? [categoryQuery] : [];
+  });
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000]);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [stockOnly, setStockOnly] = useState(false);
@@ -23,6 +26,15 @@ function ExploreContent() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+
+  // Sync category state when URL search query changes
+  useEffect(() => {
+    if (categoryQuery) {
+      setSelectedCategory([categoryQuery]);
+    } else {
+      setSelectedCategory([]);
+    }
+  }, [categoryQuery]);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categoriesList, setCategoriesList] = useState<any[]>([]);

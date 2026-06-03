@@ -1,49 +1,44 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ProductCard, type Product } from "@/components/product-card"
 import { Navbar } from "@/components/navbar"
-
-const sampleProducts: Product[] = [
-  {
-    id: "1",
-    name: "Kemeja Linen Premium Relaxed Fit",
-    slug: "kemeja-linen-premium",
-    category: "Pakaian Pria",
-    price: 450000,
-    imageUrl: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&h=600&fit=crop&q=80",
-    avgRating: 4.8,
-    reviewCount: 124,
-    stock: 25,
-  },
-  {
-    id: "2",
-    name: "Tas Kulit Handmade Artisan Collection",
-    slug: "tas-kulit-handmade",
-    category: "Aksesori",
-    price: 680000,
-    originalPrice: 850000,
-    discountPercent: 20,
-    imageUrl: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&h=600&fit=crop&q=80",
-    avgRating: 4.9,
-    reviewCount: 89,
-    stock: 12,
-  },
-  {
-    id: "3",
-    name: "Sneakers Canvas Minimalist White",
-    slug: "sneakers-canvas-white",
-    category: "Sepatu",
-    price: 320000,
-    imageUrl: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=600&fit=crop&q=80",
-    avgRating: 4.6,
-    reviewCount: 256,
-    stock: 3,
-  },
-]
+import apiClient from "@/lib/api"
 
 export default function ProductShowcase() {
   const [wishlist, setWishlist] = useState<Set<string>>(new Set())
+  const [products, setProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function getFeaturedProducts() {
+      try {
+        const res: any = await apiClient.get("/products", {
+          params: { limit: 3, sortBy: "createdAt", sortOrder: "desc" },
+        })
+        const apiProducts = res.data || []
+        const formatted = apiProducts.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          category: p.category?.name || "Umum",
+          price: p.lowestPrice || p.basePrice,
+          originalPrice: p.basePrice > (p.lowestPrice || p.basePrice) ? p.basePrice : undefined,
+          discountPercent: p.discountPercent || undefined,
+          imageUrl: p.primaryImage || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
+          avgRating: p.avgRating || 0,
+          reviewCount: p.reviewCount || 0,
+          stock: p.stock || 10,
+        }))
+        setProducts(formatted)
+      } catch (err) {
+        console.error("Error fetching featured products:", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    getFeaturedProducts()
+  }, [])
 
   const handleAddToCart = (productId: string) => {
     console.log("[v0] Adding to cart:", productId)
@@ -89,17 +84,29 @@ export default function ProductShowcase() {
         </div>
 
         {/* Product Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {sampleProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={handleAddToCart}
-              onToggleWishlist={handleToggleWishlist}
-              isWishlisted={wishlist.has(product.id)}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : products.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={handleAddToCart}
+                onToggleWishlist={handleToggleWishlist}
+                isWishlisted={wishlist.has(product.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-card py-12">
+            <div className="text-6xl mb-4">📭</div>
+            <h3 className="text-lg font-semibold text-foreground">Produk tidak ditemukan</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Belum ada produk pilihan tersedia</p>
+          </div>
+        )}
       </div>
     </main>
     </>
