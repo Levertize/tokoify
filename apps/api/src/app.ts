@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -14,7 +14,7 @@ import { prisma } from '@/lib/prisma';
 // Express App Setup
 // ==============================
 
-const app = express();
+const app: Express = express();
 
 // Security headers
 app.use(helmet());
