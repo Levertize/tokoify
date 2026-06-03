@@ -33,6 +33,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
+import apiClient from "@/lib/api";
 
 interface NavbarProps {
   user?: {
@@ -47,20 +50,20 @@ interface NavbarProps {
 
 const navLinks = [
   { href: "/", label: "Beranda" },
-  { href: "/produk", label: "Produk" },
-  { href: "/kategori", label: "Kategori", hasMegaMenu: true },
+  { href: "/jelajahi", label: "Jelajahi" },
+  { href: "/jelajahi", label: "Kategori", hasMegaMenu: true },
 ];
 
 const categories = [
-  { icon: Shirt, label: "Fashion", href: "/kategori/fashion", color: "bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400" },
-  { icon: Laptop, label: "Elektronik", href: "/kategori/elektronik", color: "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400" },
-  { icon: Sofa, label: "Rumah Tangga", href: "/kategori/rumah-tangga", color: "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" },
-  { icon: Dumbbell, label: "Olahraga", href: "/kategori/olahraga", color: "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400" },
-  { icon: Sparkles, label: "Kecantikan", href: "/kategori/kecantikan", color: "bg-pink-100 text-pink-600 dark:bg-pink-950 dark:text-pink-400" },
-  { icon: Baby, label: "Ibu & Anak", href: "/kategori/ibu-anak", color: "bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400" },
-  { icon: BookOpen, label: "Buku", href: "/kategori/buku", color: "bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400" },
-  { icon: UtensilsCrossed, label: "Makanan", href: "/kategori/makanan", color: "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400" },
-  { icon: Package, label: "Lainnya", href: "/kategori/lainnya", color: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400" },
+  { icon: Shirt, label: "Fashion", href: "/jelajahi?category=fashion", color: "bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400" },
+  { icon: Laptop, label: "Elektronik", href: "/jelajahi?category=elektronik", color: "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400" },
+  { icon: Sofa, label: "Rumah Tangga", href: "/jelajahi?category=rumah-tangga", color: "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" },
+  { icon: Dumbbell, label: "Olahraga", href: "/jelajahi?category=olahraga", color: "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400" },
+  { icon: Sparkles, label: "Kecantikan", href: "/jelajahi?category=kecantikan", color: "bg-pink-100 text-pink-600 dark:bg-pink-950 dark:text-pink-400" },
+  { icon: Baby, label: "Ibu & Anak", href: "/jelajahi?category=ibu-anak", color: "bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400" },
+  { icon: BookOpen, label: "Buku", href: "/jelajahi?category=buku", color: "bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400" },
+  { icon: UtensilsCrossed, label: "Makanan", href: "/jelajahi?category=makanan", color: "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400" },
+  { icon: Package, label: "Lainnya", href: "/jelajahi?category=lainnya", color: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400" },
 ];
 
 export function Navbar({
@@ -72,12 +75,51 @@ export function Navbar({
   notificationCount = 3,
   cartCount = 2,
 }: NavbarProps) {
+  const { user: loggedInUser, clearAuth } = useAuthStore();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  const currentUser = loggedInUser
+    ? {
+        name: loggedInUser.name,
+        email: loggedInUser.email,
+        avatar: loggedInUser.avatar || undefined,
+        initials: getInitials(loggedInUser.name),
+      }
+    : user;
+
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = React.useState(false);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
   const megaMenuTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/jelajahi?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await apiClient.post("/auth/logout");
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      clearAuth();
+      window.location.href = "/login";
+    }
+  };
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -129,7 +171,7 @@ export function Navbar({
               <span className="text-xs font-bold text-background">T</span>
             </div>
             <span className="text-xl font-semibold text-foreground">
-              Tokoify
+              Tokoku
             </span>
           </Link>
 
@@ -169,14 +211,16 @@ export function Navbar({
 
           {/* Desktop Search Bar */}
           <div className="hidden md:block">
-            <div className="relative">
+            <form onSubmit={handleSearchSubmit} className="relative">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari produk..."
                 className="h-9 w-70 rounded-full border border-border bg-background pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
               />
-            </div>
+            </form>
           </div>
 
           {/* Desktop Right Icons */}
@@ -204,17 +248,17 @@ export function Navbar({
               <DropdownMenuTrigger asChild>
                 <button className="ml-2 rounded-full focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:ring-offset-2 focus:ring-offset-background">
                   <Avatar className="size-8">
-                    {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+                    {currentUser.avatar && <AvatarImage src={currentUser.avatar} alt={currentUser.name} />}
                     <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
-                      {user.initials}
+                      {currentUser.initials}
                     </AvatarFallback>
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium text-foreground">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <p className="text-sm font-medium text-foreground">{currentUser.name}</p>
+                  <p className="text-xs text-muted-foreground">{currentUser.email}</p>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
@@ -230,7 +274,7 @@ export function Navbar({
                   Wishlist
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">
+                <DropdownMenuItem variant="destructive" onClick={handleLogout}>
                   <LogOut className="size-4" />
                   Keluar
                 </DropdownMenuItem>
@@ -282,7 +326,7 @@ export function Navbar({
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-medium text-foreground">Semua Kategori</h3>
               <Link
-                href="/kategori"
+                href="/jelajahi"
                 className="text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 Lihat Semua
@@ -320,15 +364,17 @@ export function Navbar({
           )}
         >
           <div className="px-4 py-3">
-            <div className="relative">
+            <form onSubmit={handleSearchSubmit} className="relative">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 ref={searchInputRef}
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari produk..."
                 className="h-10 w-full rounded-full border border-border bg-background pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
               />
-            </div>
+            </form>
           </div>
         </div>
 
@@ -353,14 +399,14 @@ export function Navbar({
             <div className="my-2 h-px bg-border" />
             <div className="flex items-center gap-3 py-3">
               <Avatar className="size-8">
-                {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+                {currentUser.avatar && <AvatarImage src={currentUser.avatar} alt={currentUser.name} />}
                 <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
-                  {user.initials}
+                  {currentUser.initials}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium text-foreground">{user.name}</p>
-                <p className="text-xs text-muted-foreground">{user.email}</p>
+                <p className="text-sm font-medium text-foreground">{currentUser.name}</p>
+                <p className="text-xs text-muted-foreground">{currentUser.email}</p>
               </div>
             </div>
           </div>
@@ -378,14 +424,14 @@ export function Navbar({
             <span className="text-xs">Home</span>
           </Link>
           <Link
-            href="/kategori"
+            href="/jelajahi"
             className="flex flex-col items-center gap-1 text-muted-foreground"
           >
             <Grid3X3 className="size-5" />
             <span className="text-xs">Kategori</span>
           </Link>
           <Link
-            href="/keranjang"
+            href="/checkout"
             className="relative flex flex-col items-center gap-1 text-muted-foreground"
           >
             <div className="relative">

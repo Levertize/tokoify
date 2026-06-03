@@ -156,7 +156,7 @@ export default function CheckoutPage() {
             <div className="flex size-8 items-center justify-center rounded-lg bg-foreground">
               <span className="text-sm font-bold text-background">T</span>
             </div>
-            <span className="text-lg font-semibold text-foreground">Tokoify</span>
+            <span className="text-lg font-semibold text-foreground">Tokoku</span>
           </Link>
           <span className="text-sm text-muted-foreground">Checkout Aman</span>
         </div>

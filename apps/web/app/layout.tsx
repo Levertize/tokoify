@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Toaster } from 'sonner'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Tokoify - Indonesian E-commerce',
-  description: 'Belanja produk berkualitas di Tokoify — platform e-commerce modern Indonesia',
+  title: 'Tokoku - Indonesian E-commerce',
+  description: 'Discover quality products at Tokoku',
+  generator: 'v0.app',
   icons: {
     icon: [
       {
@@ -37,7 +37,6 @@ export default function RootLayout({
     <html lang="id" className="bg-background">
       <body className="font-sans antialiased">
         {children}
-        <Toaster position="top-center" richColors />
       </body>
     </html>
   )

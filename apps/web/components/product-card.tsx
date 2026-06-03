@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import Image from "next/image"
 import { Heart, Star, ShoppingCart } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -47,15 +48,13 @@ export function ProductCard({
   const hasDiscount = product.discountPercent && product.discountPercent > 0
 
   return (
-    <article
-      className={cn(
-        "group relative flex flex-col rounded-xl border border-border bg-card",
-        "transition-all duration-300 ease-out",
-        "hover:scale-[1.02] hover:border-foreground/20"
-      )}
+    <Link
+      href={`/produk/${product.slug}`}
+      className="group relative flex flex-col rounded-xl border border-border bg-card transition-all duration-300 ease-out hover:scale-[1.02] hover:border-foreground/20"
     >
-      {/* Image Container */}
-      <div className="relative aspect-[4/3] overflow-hidden rounded-t-xl">
+      <article className="flex h-full flex-col">
+        {/* Image Container */}
+        <div className="relative aspect-[4/3] overflow-hidden rounded-t-xl">
         <Image
           src={product.imageUrl}
           alt={product.name}
@@ -174,6 +173,7 @@ export function ProductCard({
           {product.stock === 0 ? "Stok Habis" : "Tambah ke Keranjang"}
         </button>
       </div>
-    </article>
+      </article>
+    </Link>
   )
 }
