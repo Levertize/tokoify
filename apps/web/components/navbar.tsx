@@ -38,6 +38,7 @@ import { useAuthStore } from "@/store/authStore";
 import apiClient from "@/lib/api";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
+import { Button } from "@/components/ui/button";
 
 interface NavbarProps {
   user?: {
@@ -316,45 +317,56 @@ export function Navbar({
               )}
             </Link>
 
-            {/* User Avatar Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="ml-2 rounded-full focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:ring-offset-2 focus:ring-offset-background">
-                  <Avatar className="size-8">
-                    {currentUser.avatar && <AvatarImage src={currentUser.avatar} alt={currentUser.name} />}
-                    <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
-                      {currentUser.initials}
-                    </AvatarFallback>
-                  </Avatar>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium text-foreground">{currentUser.name}</p>
-                  <p className="text-xs text-muted-foreground">{currentUser.email}</p>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="size-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Package className="size-4" />
-                  Pesanan Saya
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/wishlist" className="flex w-full items-center gap-2">
-                    <Heart className="size-4" />
-                    Wishlist
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-                  <LogOut className="size-4" />
-                  Keluar
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* User Avatar Dropdown or Login/Register Buttons */}
+            {loggedInUser ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="ml-2 rounded-full focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:ring-offset-2 focus:ring-offset-background">
+                    <Avatar className="size-8">
+                      {currentUser.avatar && <AvatarImage src={currentUser.avatar} alt={currentUser.name} />}
+                      <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
+                        {currentUser.initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium text-foreground">{currentUser.name}</p>
+                    <p className="text-xs text-muted-foreground">{currentUser.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <User className="size-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Package className="size-4" />
+                    Pesanan Saya
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/wishlist" className="flex w-full items-center gap-2">
+                      <Heart className="size-4" />
+                      Wishlist
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+                    <LogOut className="size-4" />
+                    Keluar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex items-center gap-2 ml-2">
+                <Link href="/login">
+                  <Button variant="ghost" size="sm">Masuk</Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm">Daftar</Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile Right Icons */}
@@ -495,18 +507,37 @@ export function Navbar({
               </Link>
             ))}
             <div className="my-2 h-px bg-border" />
-            <div className="flex items-center gap-3 py-3">
-              <Avatar className="size-8">
-                {currentUser.avatar && <AvatarImage src={currentUser.avatar} alt={currentUser.name} />}
-                <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
-                  {currentUser.initials}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-medium text-foreground">{currentUser.name}</p>
-                <p className="text-xs text-muted-foreground">{currentUser.email}</p>
+            {loggedInUser ? (
+              <div className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-3">
+                  <Avatar className="size-8">
+                    {currentUser.avatar && <AvatarImage src={currentUser.avatar} alt={currentUser.name} />}
+                    <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
+                      {currentUser.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{currentUser.name}</p>
+                    <p className="text-xs text-muted-foreground">{currentUser.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs font-semibold text-destructive hover:underline"
+                >
+                  Keluar
+                </button>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col gap-2 py-3">
+                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full">Masuk</Button>
+                </Link>
+                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button className="w-full">Daftar</Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </header>

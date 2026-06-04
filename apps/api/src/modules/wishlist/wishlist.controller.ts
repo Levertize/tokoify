@@ -32,7 +32,7 @@ export class WishlistController {
     try {
       if (!req.user) throw new UnauthorizedError();
       const { productId } = req.params;
-      await wishlistService.removeFromWishlist(req.user.id, productId);
+      await wishlistService.removeFromWishlist(req.user.id, productId as string);
       successResponse(res, null, 'Produk berhasil dihapus dari wishlist', 200);
     } catch (error) {
       next(error);

@@ -29,7 +29,7 @@ export class CartController {
       if (!req.user) throw new UnauthorizedError();
       const { itemId } = req.params;
       const { quantity } = req.body;
-      const data = await cartService.updateQuantity(req.user.id, itemId, quantity);
+      const data = await cartService.updateQuantity(req.user.id, itemId as string, quantity);
       successResponse(res, data, 'Kuantitas item keranjang berhasil diubah', 200);
     } catch (error) {
       next(error);
@@ -40,7 +40,7 @@ export class CartController {
     try {
       if (!req.user) throw new UnauthorizedError();
       const { itemId } = req.params;
-      await cartService.removeItem(req.user.id, itemId);
+      await cartService.removeItem(req.user.id, itemId as string);
       successResponse(res, null, 'Item keranjang berhasil dihapus', 200);
     } catch (error) {
       next(error);

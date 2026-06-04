@@ -16,6 +16,7 @@ interface AuthStore {
   setAccessToken: (token: string | null) => void;
   clearAuth: () => void;
   setLoading: (isLoading: boolean) => void;
+  restoreSession: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -26,6 +27,23 @@ export const useAuthStore = create<AuthStore>((set) => ({
   setAccessToken: (token) => set({ accessToken: token }),
   clearAuth: () => set({ user: null, accessToken: null, isLoading: false }),
   setLoading: (isLoading) => set({ isLoading }),
+  restoreSession: async () => {
+    set({ isLoading: true });
+    try {
+      const apiClient = (await import('@/lib/api')).default;
+      const res: any = await apiClient.get('/auth/me', {
+        _noRedirect: true,
+      } as any);
+      if (res?.success && res.data) {
+        const token = useAuthStore.getState().accessToken;
+        set({ user: res.data, accessToken: token, isLoading: false });
+      } else {
+        set({ user: null, accessToken: null, isLoading: false });
+      }
+    } catch (err) {
+      set({ user: null, accessToken: null, isLoading: false });
+    }
+  },
 }));
 
 export default useAuthStore;

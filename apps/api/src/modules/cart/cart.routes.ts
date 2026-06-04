@@ -4,7 +4,7 @@ import { authenticate } from '@/middlewares/auth.middleware';
 import { validate } from '@/middlewares/validate.middleware';
 import { AddToCartSchema, UpdateQuantitySchema } from './cart.schema';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/', authenticate, cartController.getCart);
 router.post('/', authenticate, validate(AddToCartSchema), cartController.addToCart);
