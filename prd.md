@@ -1,3 +1,4 @@
+
 # 📦 PRD — Aplikasi E-Commerce Full-Stack Modern
 **Version:** 1.0.0  
 **Last Updated:** 2026-06-01  
